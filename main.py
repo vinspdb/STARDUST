@@ -6,7 +6,7 @@ for order, algo, cut, top, filtering, frequency, update in product([Order.FRQ], 
     print(f'{order.name},{algo.name},{cut},{top},{filtering},{frequency},{update}')
     miner = Miner(log_name, order, algo, cut, top, filtering, frequency, update)
     try:
-        miner.process_stream()
+        miner.process_stream_with_tree()
         miner.save_results()
         miner.generate_summary(log_name)
     except Exception as e:
