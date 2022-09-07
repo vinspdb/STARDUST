@@ -21,7 +21,9 @@ from pm4py.algo.discovery.inductive import algorithm as inductive_miner
 from pm4py.algo.evaluation.replay_fitness import algorithm as fitness_evaluator
 from pm4py.algo.evaluation.precision import algorithm as precision_evaluator
 from pm4py.visualization.petri_net import visualizer as pn_visualizer
-
+from anytree import Node, RenderTree, AsciiStyle, PreOrderIter
+import memory_tree as mem_tree
+import pickle
 CASE_ID_KEY = 'case:concept:name'
 ACTIVITY_KEY = 'concept:name'
 FINAL_ACTIVITY = '_END_'
@@ -87,13 +89,15 @@ class Miner:
         self.update = update
         self.processed_traces = 0
         self.variants = Counter()
+        self.variants_check = Counter()
         self.best_variants = None
         self.models = []
         self.drift_moments = []
         self.drift_variants = []
         self.evaluations = []
+        self.removeded_trace = 0
 
-    def process_stream(self):
+    def process_stream_with_tree(self):
         """
         Processa iterativamente uno stream di eventi in formato CSV, ignorando attività che si ripetano in modo
         consecutivo per un numero di occorrenze superiore a due e aggiornando il contatore delle varianti in
@@ -102,15 +106,43 @@ class Miner:
         """
         print('Processing event stream...')
         stream = csv_stream_importer.apply(path.join('eventlog', 'CSV', self.log_name + '.csv'))
-        traces = {}
         start = process_time()
+        root = Node(id='root', name='root', parent=None, case_id=[])
+        i = 0
+        hashtable = {}
         for event in stream:
             case = event[CASE_ID_KEY]
             activity = event[ACTIVITY_KEY]
+
+            check_case_id = hashtable.get(case)
+            
             if activity == FINAL_ACTIVITY:
-                new_trace = tuple(traces.pop(case))
+                new_trace = tuple(mem_tree.get_trace(check_case_id))
+                hashtable.pop(str(case))
+                mem_tree.pruned_tree(check_case_id, hashtable)
+
                 self.variants[new_trace] += 1
+                self.variants_check[new_trace] = 0
                 self.processed_traces += 1
+
+
+                for c in self.variants_check:
+                    if c != new_trace:
+                        self.variants_check[c] += 1
+
+
+                obsolete_list = []
+                for c in self.variants_check:
+                    if self.variants_check[c] == self.cut:
+                            obsolete_list.append(c)
+                
+
+                if len(obsolete_list) != 0:
+                        for o in obsolete_list:
+                            self.removeded_trace =  self.removeded_trace + self.variants[o]
+                            del self.variants[o]
+                            del self.variants_check[o]
+
                 if self.processed_traces == self.cut:
                     self.select_best_variants()
                     self.learn_model()
@@ -127,11 +159,32 @@ class Miner:
                     end = process_time()
                     self.evaluations[-1].append(end - start)
                     start = end
-            elif case not in traces:
-                traces[case] = [activity]
-            elif len(traces[case]) == 1 or traces[case][-1] != activity or traces[case][-2] != activity:
-                traces[case].append(activity)
-
+            else:
+                if check_case_id == None:
+                    child = mem_tree.check_exist_child(root.children, activity)
+                    if child == None:
+                        nodo = Node(name=i, id = activity, parent=root)
+                        i = i + 1
+                    else:
+                        nodo = child
+                else:
+                    x = hashtable.get(case)
+                    child = mem_tree.check_exist_child(x.children, activity)
+                    if child != None:
+                        nodo = child
+                    else:
+                        father = x.id
+                        grandfather = x.parent.id
+                        if father == activity and grandfather != activity:
+                                nodo = Node(name=i, id=activity, parent=x)
+                                i = i + 1
+                        elif father == activity and grandfather == activity:
+                            nodo = x
+                        else:
+                            nodo = Node(name=i, id=activity, parent=x)
+                            i = i + 1
+                hashtable[case] = nodo
+    
     def select_best_variants(self):
         """
         Determina le varianti più significative all'istante corrente secondo il criterio d'ordine selezionato
@@ -140,7 +193,8 @@ class Miner:
         if top_variants is None:
             counter = 0
             top_variants = 0
-            while counter / self.processed_traces < 0.8:
+            diff = (self.processed_traces - self.removeded_trace)
+            while counter / diff < 0.8:
                 counter += sorted(self.variants.values(), reverse=True)[top_variants]
                 top_variants += 1
         if self.order == Order.FRQ:
