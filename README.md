@@ -8,7 +8,8 @@
 
 Please cite our work if you find it useful for your research and work.
 ```
-@ARTICLE{9925089,  author={Pasquadibisceglie, Vincenzo and Appice, Annalisa and Castellano, Giovanna and Fiorentino, Nicola and Malerba, Donato},  
+@ARTICLE{9925089, 
+         author={Pasquadibisceglie, Vincenzo and Appice, Annalisa and Castellano, Giovanna and Fiorentino, Nicola and Malerba, Donato},  
          journal={IEEE Transactions on Services Computing},   
          title={STARDUST: A Novel Process Mining approach to Discover Evolving Models From trace Streams},   
          year={2022},  
