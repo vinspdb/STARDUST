@@ -8,14 +8,13 @@
 
 Please cite our work if you find it useful for your research and work.
 ```
-@ARTICLE{9925089,
-  author={Pasquadisceglie, Vincenzo and Appice, Annalisa and Castellano, Giovanna and Fiorentino, Nicola and Malerba, Donato},
-  journal={IEEE Transactions on Services Computing}, 
-  title={STARDUST: A Novel Process Mining approach to Discover Evolving Models From trace Streams}, 
-  year={2022},
-  volume={},
-  number={},
-  pages={1-14},
-  doi={10.1109/TSC.2022.3215502}}
+@ARTICLE{9925089,  author={Pasquadibisceglie, Vincenzo and Appice, Annalisa and Castellano, Giovanna and Fiorentino, Nicola and Malerba, Donato},  
+         journal={IEEE Transactions on Services Computing},   
+         title={STARDUST: A Novel Process Mining approach to Discover Evolving Models From trace Streams},   
+         year={2022},  
+         volume={},  
+         number={},  
+         pages={1-14},  
+         doi={10.1109/TSC.2022.3215502}}
 ```
 
