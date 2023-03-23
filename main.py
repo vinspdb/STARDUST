@@ -3,7 +3,7 @@ from itertools import product
 
 log_name = 'road'
 Miner.generate_csv(log_name)
-for order, algo, cut, top, filtering, frequency, update in product([Order.FRQ], [Algo.ILP], [15000], [None], [True, False], [True, False], [True, False]):
+for order, algo, cut, top, filtering, frequency, update in product([Order.FRQ], [Algo.IND], [15000], [None], [True, False], [True, False], [True, False]):
     print(f'{order.name},{algo.name},{cut},{top},{filtering},{frequency},{update}')
     miner = Miner(log_name, order, algo, cut, top, filtering, frequency, update)
     try:
